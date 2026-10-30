@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fahrplan Niki</title>
+<meta name="description" content="Wer fährt diese Woche ans Niki und zurück?">
+<meta property="og:title" content="Fahrplan Niki 🚗">
+<meta property="og:description" content="Wer fährt diese Woche hin und zurück? Einfach antippen und eintragen.">
+<meta name="theme-color" content="#1f4e46">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f1e8; --card:#fffdf8; --ink:#1d2a27; --muted:#6b7672; --line:#e4ddcd;
+  --accent:#1f4e46; --accent-2:#e8a33d; --today:#fff4dc; --empty:#f0ebdf;
+  --shadow:0 1px 2px rgba(30,40,35,.06),0 4px 14px rgba(30,40,35,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141a18; --card:#1d2522; --ink:#eef1ee; --muted:#9aa6a1; --line:#2c3632;
+    --accent:#7cc4b4; --accent-2:#f0b65a; --today:#2a2a1f; --empty:#242d2a; --shadow:none; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,-apple-system,sans-serif;
+  -webkit-tap-highlight-color:transparent;padding:env(safe-area-inset-top) 0 calc(24px + env(safe-area-inset-bottom))}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+header{padding:20px 0 8px}
+h1{font-size:24px;font-weight:800;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+.me{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;color:var(--muted);
+  background:none;border:1px dashed var(--line);border-radius:999px;padding:5px 12px;font-family:inherit;cursor:pointer}
+.me b{color:var(--ink)}
+.weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 10px}
+.weeknav button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+  color:var(--ink);font-size:20px;cursor:pointer;font-family:inherit}
+.weeklabel{text-align:center;flex:1}
+.weeklabel .kw{font-weight:800;font-size:17px}
+.weeklabel .range{color:var(--muted);font-size:13px}
+.thisweek{display:block;margin:2px auto 0;background:none;border:none;color:var(--accent);font-weight:700;
+  font-family:inherit;font-size:13px;cursor:pointer;padding:4px}
+.cols{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;padding:0 4px 6px;color:var(--muted);
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.day{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:stretch;background:var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:8px;margin-bottom:8px;box-shadow:var(--shadow)}
+.day.today{background:var(--today);border-color:var(--accent-2)}
+.dlabel{display:flex;flex-direction:column;justify-content:center;padding-left:6px}
+.dlabel .wd{font-weight:800;font-size:17px}
+.dlabel .dt{color:var(--muted);font-size:12px}
+.slot{min-height:58px;border-radius:12px;border:none;font-family:inherit;cursor:pointer;text-align:left;
+  padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:1px;color:var(--ink);
+  background:var(--empty);transition:transform .08s}
+.slot:active{transform:scale(.97)}
+.slot .who{font-weight:800;font-size:16px;line-height:1.2;word-break:break-word}
+.slot .note{font-size:12px;opacity:.8;line-height:1.25}
+.slot.empty .who{font-weight:700;font-size:14px;color:var(--muted)}
+.slot.mine{outline:2px solid currentColor;outline-offset:-2px}
+.status{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;min-height:16px}
+.share{display:flex;gap:8px;margin-top:14px}
+.share button{flex:1;height:46px;border-radius:12px;border:none;background:var(--accent);color:#fff;
+  font-weight:800;font-family:inherit;font-size:15px;cursor:pointer}
+@media (prefers-color-scheme: dark){.share button{color:#0f1715}}
+.share button.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,15,13,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.scrim.open{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom));animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.5}}
+.sheet h2{margin:0 0 2px;font-size:19px;font-weight:800}
+.sheet .hint{color:var(--muted);font-size:13px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:none;border-radius:999px;padding:10px 16px;font-weight:800;font-family:inherit;font-size:15px;cursor:pointer;color:var(--ink)}
+.chip.sel{outline:3px solid var(--ink);outline-offset:1px}
+label.f{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:6px 0 4px}
+input.t{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+  padding:0 12px;font-size:16px;font-family:inherit}
+.row{display:flex;gap:8px;margin-top:16px}
+.row button{flex:1;height:48px;border-radius:12px;font-weight:800;font-family:inherit;font-size:15px;cursor:pointer;border:none}
+.save{background:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.save{color:#0f1715}}
+.clear{background:var(--empty);color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;
+  opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🚗 Fahrplan Niki</h1>
+    <div class="sub">Wer fährt hin, wer holt ab? Einfach aufs Feld tippen.</div>
+    <button class="me" id="meBtn">Ich bin: <b id="meName">–</b> ✎</button>
+  </header>
+
+  <div class="weeknav">
+    <button id="prev" aria-label="Vorige Woche">‹</button>
+    <div class="weeklabel">
+      <div class="kw" id="kw"></div>
+      <div class="range" id="range"></div>
+      <button class="thisweek" id="thisweek" hidden>↩ zur aktuellen Woche</button>
+    </div>
+    <button id="next" aria-label="Nächste Woche">›</button>
+  </div>
+
+  <div class="cols"><span></span><span>Hinfahrt</span><span>Rückfahrt</span></div>
+  <div id="days"></div>
+  <div class="status" id="status"></div>
+
+  <div class="share">
+    <button id="shareBtn">Woche als Text teilen</button>
+    <button class="ghost" id="reload">↻ Aktualisieren</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <h2 id="sTitle"></h2>
+    <div class="hint" id="sHint">Wer fährt?</div>
+    <div class="chips" id="chips"></div>
+    <label class="f" for="other">Anderer Name</label>
+    <input class="t" id="other" placeholder="z. B. Papa Tom" maxlength="40" autocomplete="off">
+    <label class="f" for="note">Notiz (optional)</label>
+    <input class="t" id="note" placeholder="z. B. 13:15 Uhr · langer Tag · 4 Plätze" maxlength="80" autocomplete="off">
+    <div class="row">
+      <button class="clear" id="sClear">Leeren</button>
+      <button class="save" id="sSave">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="nameScrim">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <h2>Wie heißt du?</h2>
+    <div class="hint">Damit du dich mit einem Tipp eintragen kannst. Wird nur auf diesem Handy gemerkt.</div>
+    <input class="t" id="myName" placeholder="Dein Name" maxlength="40" autocomplete="given-name">
+    <div class="row"><button class="save" id="nameSave">Los geht's</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const WD = ["Mo","Di","Mi","Do","Fr"];
+  const WD_LONG = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
+  const SLOT_LABEL = { hin: "Hinfahrt", rueck: "Rückfahrt" };
+  const PALETTE = [
+    ["#d6ece6","#174a40"],["#fbe3c2","#6a3f05"],["#e2ddf6","#3b2d78"],
+    ["#f8d9dc","#7a1f2b"],["#d9e8f7","#18406a"],["#e6efcf","#3e5110"]
+  ];
+  const PALETTE_DARK = [
+    ["#21453d","#c5efe4"],["#4d3a1c","#fde1b5"],["#36305a","#ddd6ff"],
+    ["#4d2a2f","#ffd3d8"],["#233a52","#cfe4fb"],["#35411f","#e3f2bf"]
+  ];
+  const dark = matchMedia("(prefers-color-scheme: dark)");
+
+  const ls = {
+    get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  let me = ls.get("fp_me", "");
+  let known = ls.get("fp_known", []);
+  let offset = 0;
+  let entries = {};
+  let editing = null, chosen = "";
+
+  const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+  function monday(off){
+    const d = new Date(); d.setHours(12,0,0,0);
+    const dow = (d.getDay() + 6) % 7;      // Mo=0
+    // am Wochenende direkt die kommende Woche zeigen
+    const base = dow >= 5 ? 7 - dow : -dow;
+    d.setDate(d.getDate() + base + off * 7);
+    return d;
+  }
+  function weekDays(off){
+    const m = monday(off);
+    return [0,1,2,3,4].map(i => { const d = new Date(m); d.setDate(m.getDate()+i); return d; });
+  }
+  function kw(d){
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n);
+    const y = new Date(Date.UTC(t.getUTCFullYear(),0,1));
+    return Math.ceil(((t - y) / 86400000 + 1) / 7);
+  }
+  const fmt = (d) => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.`;
+
+  function colorFor(name){
+    const pal = dark.matches ? PALETTE_DARK : PALETTE;
+    const n = name.trim().toLowerCase();
+    let idx = known.findIndex(k => k.toLowerCase() === n);
+    if (idx < 0) { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) >>> 0; idx = h; }
+    return pal[idx % pal.length];
+  }
+
+  function remember(name){
+    if (!name) return;
+    if (!known.some(k => k.toLowerCase() === name.toLowerCase())) { known.push(name); ls.set("fp_known", known.slice(-8)); }
+  }
+
+  function toast(msg){
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function render(){
+    const days = weekDays(offset);
+    $("kw").textContent = `KW ${kw(days[0])}`;
+    $("range").textContent = `${fmt(days[0])} – ${fmt(days[4])}${days[4].getFullYear()}`;
+    $("thisweek").hidden = offset === 0;
+    $("meName").textContent = me || "–";
+    const today = iso(new Date());
+    const box = $("days"); box.textContent = "";
+    days.forEach((d, i) => {
+      const row = document.createElement("div");
+      row.className = "day" + (iso(d) === today ? " today" : "");
+      const lab = document.createElement("div"); lab.className = "dlabel";
+      lab.innerHTML = `<span class="wd"></span><span class="dt"></span>`;
+      lab.children[0].textContent = WD[i]; lab.children[1].textContent = fmt(d);
+      row.appendChild(lab);
+      ["hin","rueck"].forEach(slot => {
+        const key = `${iso(d)}/${slot}`;
+        const e = entries[key];
+        const b = document.createElement("button");
+        b.className = "slot";
+        b.setAttribute("aria-label", `${WD_LONG[i]} ${SLOT_LABEL[slot]}`);
+        const who = document.createElement("span"); who.className = "who";
+        if (e && e.name){
+          const [bg, fg] = colorFor(e.name);
+          b.style.background = bg; b.style.color = fg;
+          who.textContent = e.name;
+          if (me && e.name.toLowerCase() === me.toLowerCase()) b.classList.add("mine");
+        } else {
+          b.classList.add("empty"); who.textContent = e && e.note ? "offen" : "+ eintragen";
+        }
+        b.appendChild(who);
+        if (e && e.note){ const n = document.createElement("span"); n.className = "note"; n.textContent = e.note; b.appendChild(n); }
+        b.onclick = () => openSheet(d, i, slot);
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    });
+  }
+
+  async function load(quiet){
+    const days = weekDays(offset).map(iso);
+    if (!quiet) $("status").textContent = "Lade …";
+    try {
+      const r = await fetch(`/api/week?days=${days.join(",")}`, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      entries = data.entries || {};
+      Object.values(entries).forEach(e => remember(e.name));
+      const t = new Date();
+      $("status").textContent = `Stand ${pad(t.getHours())}:${pad(t.getMinutes())} Uhr`;
+    } catch {
+      $("status").textContent = "Keine Verbindung – bitte gleich nochmal versuchen.";
+    }
+    render();
+  }
+
+  function openSheet(d, i, slot){
+    const key = `${iso(d)}/${slot}`;
+    const e = entries[key] || {};
+    editing = { day: iso(d), slot, key };
+    chosen = e.name || "";
+    $("sTitle").textContent = `${WD_LONG[i]}, ${fmt(d)} · ${SLOT_LABEL[slot]}`;
+    $("note").value = e.note || "";
+    $("other").value = "";
+    const names = [...new Set([me, ...known, e.name].filter(Boolean))];
+    const chips = $("chips"); chips.textContent = "";
+    names.forEach(n => {
+      const c = document.createElement("button");
+      c.className = "chip"; c.textContent = n === me ? `${n} (ich)` : n;
+      const [bg, fg] = colorFor(n); c.style.background = bg; c.style.color = fg;
+      if (chosen && n.toLowerCase() === chosen.toLowerCase()) c.classList.add("sel");
+      c.onclick = () => {
+        chosen = n; $("other").value = "";
+        chips.querySelectorAll(".chip").forEach(x => x.classList.remove("sel")); c.classList.add("sel");
+      };
+      chips.appendChild(c);
+    });
+    $("scrim").classList.add("open");
+  }
+  function closeSheet(){ $("scrim").classList.remove("open"); editing = null; }
+
+  async function save(name, note){
+    if (!editing) return;
+    const { day, slot, key } = editing;
+    const prev = entries[key];
+    if (name || note) entries[key] = { name, note }; else delete entries[key];
+    remember(name);
+    closeSheet(); render();
+    try {
+      const r = await fetch("/api/entry", { method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ day, slot, name, note }) });
+      if (!r.ok) throw new Error(r.status);
+      toast(name ? `Gespeichert: ${name}` : "Feld geleert");
+    } catch {
+      if (prev) entries[key] = prev; else delete entries[key];
+      render(); toast("Speichern hat nicht geklappt");
+    }
+  }
+
+  $("sSave").onclick = () => {
+    const other = $("other").value.trim();
+    save(other || chosen, $("note").value.trim());
+  };
+  $("sClear").onclick = () => save("", "");
+  $("scrim").onclick = (ev) => { if (ev.target.id === "scrim") closeSheet(); };
+
+  function askName(){ $("myName").value = me; $("nameScrim").classList.add("open"); setTimeout(() => $("myName").focus(), 50); }
+  $("nameSave").onclick = () => {
+    const v = $("myName").value.trim(); if (!v) return;
+    me = v; ls.set("fp_me", me); remember(me);
+    $("nameScrim").classList.remove("open"); render();
+  };
+  $("myName").onkeydown = (e) => { if (e.key === "Enter") $("nameSave").click(); };
+  $("meBtn").onclick = askName;
+
+  $("prev").onclick = () => { offset--; entries = {}; render(); load(); };
+  $("next").onclick = () => { offset++; entries = {}; render(); load(); };
+  $("thisweek").onclick = () => { offset = 0; entries = {}; render(); load(); };
+  $("reload").onclick = () => load();
+
+  $("shareBtn").onclick = async () => {
+    const days = weekDays(offset);
+    const line = (e) => e && e.name ? e.name + (e.note ? ` (${e.note})` : "") : (e && e.note ? `offen (${e.note})` : "offen");
+    const txt = [`🚗 Fahrplan Niki · KW ${kw(days[0])} (${fmt(days[0])}–${fmt(days[4])})`]
+      .concat(days.map((d, i) => `${WD[i]}: hin ${line(entries[`${iso(d)}/hin`])} · zurück ${line(entries[`${iso(d)}/rueck`])}`))
+      .concat(["", location.origin]).join("\n");
+    if (navigator.share) { try { await navigator.share({ text: txt }); return; } catch (e) { if (e.name === "AbortError") return; } }
+    try { await navigator.clipboard.writeText(txt); toast("Text kopiert – in WhatsApp einfügen"); }
+    catch { location.href = "https://wa.me/?text=" + encodeURIComponent(txt); }
+  };
+
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(true); });
+  setInterval(() => { if (!document.hidden && !editing) load(true); }, 30000);
+  dark.addEventListener?.("change", render);
+
+  render(); load();
+  if (!me) askName();
+})();
+</script>
+</body>
+</html>
