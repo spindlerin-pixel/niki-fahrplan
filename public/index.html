@@ -33,14 +33,14 @@ h1{font-size:24px;font-weight:800;margin:0;letter-spacing:-.01em}
   background:none;border:1px dashed var(--line);border-radius:999px;padding:5px 12px;font-family:inherit;cursor:pointer}
 .me b{color:var(--ink)}
 .weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 10px}
-.weeknav button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+.weeknav > button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);
   color:var(--ink);font-size:20px;cursor:pointer;font-family:inherit}
 .weeklabel{text-align:center;flex:1}
 .weeklabel .kw{font-weight:800;font-size:17px}
 .weeklabel .range{color:var(--muted);font-size:13px}
 .thisweek[hidden]{display:none}
 .thisweek{display:block;margin:2px auto 0;background:none;border:none;color:var(--accent);font-weight:700;
-  font-family:inherit;font-size:13px;cursor:pointer;padding:4px}
+  font-family:inherit;font-size:13px;cursor:pointer;padding:4px;width:auto;height:auto;white-space:nowrap}
 .cols{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;padding:0 4px 6px;color:var(--muted);
   font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .day{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:stretch;background:var(--card);
@@ -271,7 +271,8 @@ input.t{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);b
     const key = `${iso(d)}/${slot}`;
     const e = entries[key] || {};
     editing = { day: iso(d), slot, key };
-    chosen = e.name || "";
+    // leeres Feld: eigener Name ist vorausgewählt
+    chosen = e.name || me || "";
     $("sTitle").textContent = `${WD_LONG[i]}, ${fmt(d)} · ${SLOT_LABEL[slot]}`;
     $("note").value = e.note || "";
     $("other").value = "";
@@ -312,7 +313,9 @@ input.t{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);b
 
   $("sSave").onclick = () => {
     const other = $("other").value.trim();
-    save(other || chosen, $("note").value.trim());
+    const name = other || chosen, note = $("note").value.trim();
+    if (!name && !note) { toast("Bitte erst einen Namen antippen"); return; }
+    save(name, note);
   };
   $("sClear").onclick = () => save("", "");
   $("scrim").onclick = (ev) => { if (ev.target.id === "scrim") closeSheet(); };
